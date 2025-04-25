@@ -1,0 +1,420 @@
+  SRV=admin5
+    2  pwd
+    3  cd /home/$SRV/SNP_calling/first_part/raw_data/
+    4  ls
+    5  ls -lhrt
+    6  less ym-WT_sub.fastq
+    7  less ym-7_sub.fastq
+    8  /home/group_11
+    9  pwd
+   10  ~
+   11  less ym-WT_sub.fastq
+   12  less ym-7_sub.fastq
+   13  cd /home/group11
+   14  cd /home/group_11
+   15  pwde
+   16  pwd
+   17  mkdir Variant_Calling
+   18  cd Variant_Calling
+   19  pwd
+   20  cp /home/$SRV/SNP_calling/first_part/raw_data/ym-WT_sub.fastq .
+   21  ls
+   22  cp /home/$SRV/SNP_calling/first_part/raw_data/ym-7_sub.fastq .
+   23  ls
+   24  ls -lhrt
+   25  head
+   26  head ym-WT_sub.fastq
+   27  head ym-7_sub.fastq
+   28  wc -l ym-WT_sub.fastq
+   29  wc -l @NB501365:373:H7LTKBGXB:3:23501:12686:12384 1:N:0:CTTGTA
+   30  ACATTGTGTTTGCCTGACATGTATCTATCATAAAGAAGATTTCATTGTATCTTTTCTTTTCGTACATTTGCTGGA
+   31  +
+   32  wc -l ym-7_sub.fastq
+   33* fastqc ym-7_sub.fastq
+   34  ls
+   35  fastqc ym-7_sub.fastq
+   36  ls
+   37  ~
+   38  cd /home/group_11
+   39  mkdir reference_dir
+   40  cd reference_dir
+   41  cp /home/$SRV/SNP_calling/first_part/reference/S288C_reference_plus_2u.fa .
+   42  hisat2-build S288C_reference_plus_2u.fa yeast
+   43  ls
+   44  cd /home/group_11
+   45  cd Variant_Calling
+   46  hisat2 -q -x reference_dir/yeast -U ym-WT_sub.fastq -S ym-WT.sam
+   47  ls
+   48  hisat2 -q -x reference_dir/yeast -U ym-WT_sub.fastq -S ym-WT.sam
+   49  hisat2 -q -x ../reference_dir/yeast -U ym-WT_sub.fastq -S ym-WT.sam
+   50  hisat2 -q -x ../reference_dir/yeast -U ym-7_sub.fastq -S ym-7.sam
+   51  head -30 ym-WT.sam
+   52  samtools view -bS -h ym-WT.sam > ym-WT.bam
+   53  samtools view -bS -h ym-7.sam > ym-7.bam
+   54  head -30 ym-WT.bam
+   55  samtools view ym-WT.bam
+   56  samtools view -b -F 4 ym-WT.bam > ym-WT_mapped.bam
+   57  samtools view -b -F 4 ym-7.bam > ym-7_mapped.bam
+   58  gatk SortSam -INPUT ym-WT_mapped.bam -OUTPUT ym-WT_sorted.bam -SORT_ORDER coordinate
+   59  gatk SortSam -INPUT ym-7_mapped.bam -OUTPUT ym-7_sorted.bam -SORT_ORDER coordinate
+   60  gatk MarkDuplicates -INPUT ym-WT_sorted.bam -OUTPUT ym-WT_sorted_and_marked_file.bam -METRICS_FILE ym-WT_metrics.txt -VALIDATION_STRINGENCY LENIENT -REMOVE_DUPLICATES True -CREATE_INDEX True
+   61  gatk MarkDuplicates -INPUT ym-7_sorted.bam -OUTPUT ym-7_sorted_and_marked_file.bam -METRICS_FILE ym-7_metrics.txt -VALIDATION_STRINGENCY LENIENT -REMOVE_DUPLICATES True -CREATE_INDEX True
+   62  gatk AddOrReplaceReadGroups -I ym-WT_sorted_and_marked_file.bam -O ym-WT_sorted_marked_ReadGroups_file.bam -RGID 4 -RGLB lib1 -RGPL ILLUMINA -RGPU unit1 -RGSM 20
+   63  gatk AddOrReplaceReadGroups -I ym-7_sorted_and_marked_file.bam -O ym-7_sorted_marked_ReadGroups_file.bam -RGID 4 -RGLB lib1 -RGPL ILLUMINA -RGPU unit1 -RGSM 20
+   64  samtools index ym-WT_sorted_marked_ReadGroups_file.bam
+   65  samtools index ym-7_sorted_marked_ReadGroups_file.bam
+   66  cd home/group_11
+   67  ~
+   68*
+   69  ls
+   70  cd reference_dir/
+   71  ls
+   72  PICARD=/home/$SRV/SNP_calling/first_part/software/picard.jar
+   73  java -jar $PICARD CreateSequenceDictionary R=S288C_reference_plus_2u.fa O=S288C_reference_plus_2u.dict
+   74  samtools faidx S288C_reference_plus_2u.fa
+   75  gatk HaplotypeCaller -R reference_dir/S288C_reference_plus_2u.fa -I ym-WT_sorted_marked_ReadGroups_file.bam  -O ym-WT_raw_variants.vcf
+   76  ls
+   77  cd /home/group_11
+   78  cd Variant_Calling/
+   79  gatk HaplotypeCaller -R ../reference_dir/S288C_reference_plus_2u.fa -I ym-WT_sorted_marked_ReadGroups_file.bam  -O ym-WT_raw_variants.vcf
+   80  gatk HaplotypeCaller -R ../reference_dir/S288C_reference_plus_2u.fa -I ym-7_sorted_marked_ReadGroups_file.bam  -O ym-7_raw_variants.vcf
+   81  cf
+   82  gatk SelectVariants -R ../reference_dir/S288C_reference_plus_2u.fa -V ym-WT_raw_variants.vcf --select-type-to-include SNP -O ym-WT_raw_snps.vcf
+   83  gatk SelectVariants -R ../reference_dir/S288C_reference_plus_2u.fa -V ym-7_raw_variants.vcf --select-type-to-include SNP -O ym-7_raw_snps.vcf
+   84  gatk SelectVariants -R ../reference_dir/S288C_reference_plus_2u.fa -V ym-WT_raw_variants.vcf --select-type-to-include INDEL -O ym-WT_raw_indels.vcf
+   85  gatk SelectVariants -R ../reference_dir/S288C_reference_plus_2u.fa -V ym-7_raw_variants.vcf --select-type-to-include INDEL -O ym-7_raw_indels.vcf
+   86  gatk VariantFiltration -R ../reference_dir/S288C_reference_plus_2u.fa -V ym-WT_raw_snps.vcf --filter-expression 'QD < 2.0 || FS > 60.0 || MQ < 40.0 || MQRankSum < -12.5 || ReadPosRankSum < -8.0 || SOR > 4.0' --filter-name "basic_snp_filter" -O ym-WT_filtered_snps.vcf
+   87  gatk VariantFiltration -R ../reference_dir/S288C_reference_plus_2u.fa -V ym-7_raw_snps.vcf --filter-expression 'QD < 2.0 || FS > 60.0 || MQ < 40.0 || MQRankSum < -12.5 || ReadPosRankSum < -8.0 || SOR > 4.0' --filter-name "basic_snp_filter" -O ym-7_filtered_snps.vcf
+   88  gatk VariantFiltration -R ../reference_dir/S288C_reference_plus_2u.fa -V ym-WT_raw_indels.vcf --filter-expression 'QD < 2.0 || FS > 200.0 || ReadPosRankSum < -20.0 || SOR > 10.0' --filter-name "basic_indel_filter" -O ym-WT_filtered_indels.vcf
+   89  gatk VariantFiltration -R ../reference_dir/S288C_reference_plus_2u.fa -V ym-7_raw_indels.vcf --filter-expression 'QD < 2.0 || FS > 200.0 || ReadPosRankSum < -20.0 || SOR > 10.0' --filter-name "basic_indel_filter" -O ym-7_filtered_indels.vcf
+   90  gatk BaseRecalibrator -R ../reference_dir/S288C_reference_plus_2u.fa -I ym-WT_sorted_marked_ReadGroups_file.bam  --known-sites ym-WT_filtered_snps.vcf  --known-sites ym-WT_filtered_indels.vcf -O ym-WT_recal_data.table
+   91  gatk BaseRecalibrator -R ../reference_dir/S288C_reference_plus_2u.fa -I ym-7_sorted_marked_ReadGroups_file.bam  --known-sites ym-7_filtered_snps.vcf  --known-sites ym-7_filtered_indels.vcf -O ym-7_recal_data.table
+   92  gatk ApplyBQSR -R ../reference_dir/S288C_reference_plus_2u.fa -I ym-WT_sorted_marked_ReadGroups_file.bam --bqsr-recal-file ym-WT_recal_data.table -O ym-WT_recal_reads.bam
+   93  gatk ApplyBQSR -R ../reference_dir/S288C_reference_plus_2u.fa -I ym-7_sorted_marked_ReadGroups_file.bam --bqsr-recal-file ym-7_recal_data.table -O ym-7_recal_reads.bam
+   94  gatk HaplotypeCaller -R ../reference_dir/S288C_reference_plus_2u.fa -I ym-WT_recal_reads.bam  -O ym-WT_variants_recal.vcf
+   95  gatk HaplotypeCaller -R ../reference_dir/S288C_reference_plus_2u.fa -I ym-7_recal_reads.bam  -O ym-7_variants_recal.vcf
+   96  less ym-WT_variants_recal.vcf
+   97  grep -n ^chr ym-WT_variants_recal.vcf | head -n1
+   98  grep -n ^chr ym-7_variants_recal.vcf | head -n1
+   99  grep -c ^chr ym-WT_variants_recal.vcf
+  100  grep -c ^chr ym-7_variants_recal.vcf
+  101  grep -c LowQual ym-WT_variants_recal.vcf
+  102  grep -c LowQual ym-7_variants_recal.vcf
+  103  cd /home/group_11
+  104  cd reference_dir/
+  105  ls
+  106  cd /home/group_11
+  107  cd Variant_Calling/
+  108  less ym-7_variants_recal.vcf
+  109  vcftools --vcf ym-7_variants_recal.vcf --diff ym-WT_variants_recal.vcf --diff-site --out compared
+  110  less compared.diff.sites_in_files | awk 'BEGIN{print "Chr\tPos\tREF\tALT"}; NR > 1{ if ($4 == 1) { print $1, $2, $5, $7} }' OFS='\t' > variants.txtless compared.diff.sites_in_files | awk 'BEGIN{print "Chr\tPos\tREF\tALT"}; NR > 1{ if ($4 == 1) { print $1, $2, $5, $7} }' OFS='\t' > variants.txt
+  111  ls
+  112  ll
+  113  history
+
+group_11@vpsmbw-p-srv05:~$ cd Variant_Calling/
+group_11@vpsmbw-p-srv05:~/Variant_Calling$ hisat2 -q -x reference_dir/yeast -U g                                                                                                             11mut_sub.fastq -S g11mutv2.sam
+Warning: Could not open read file "g11mut_sub.fastq" for reading; skipping...
+Error: No input read files were valid
+(ERR): hisat2-align exited with value 1
+group_11@vpsmbw-p-srv05:~/Variant_Calling$ hisat2 -q -x ../reference_dir/yeast -                                                                                                             U g11mut_sub.fastq -S g11mutv2.sam
+Warning: Could not open read file "g11mut_sub.fastq" for reading; skipping...
+Error: No input read files were valid
+(ERR): hisat2-align exited with value 1
+group_11@vpsmbw-p-srv05:~/Variant_Calling$ ls
+compared.diff.sites_in_files
+compared.log
+g11mut.bam
+g11mut_filtered_indels.vcf
+g11mut_filtered_indels.vcf.idx
+g11mut_filtered_snps.vcf
+g11mut_filtered_snps.vcf.idx
+g11mut_mapped.bam
+g11mut_metrics.txt
+g11mut_raw_indels.vcf
+g11mut_raw_indels.vcf.idx
+g11mut_raw_snps.vcf
+g11mut_raw_snps.vcf.idx
+g11mut_raw_variants.vcf
+g11mut_raw_variants.vcf.idx
+g11mut_recal_data.table
+g11mut_recal_reads.bai
+g11mut_recal_reads.bam
+g11mut.sam
+g11mut_sorted_and_marked_file.bai
+g11mut_sorted_and_marked_file.bam
+g11mut_sorted.bam
+g11mut_sorted_marked_ReadGroups_file.bam
+g11mut_sorted_marked_ReadGroups_file.bam.bai
+g11mut_variants_recal.vcf
+g11mut_variants_recal.vcf.idx
+group_11_S11_L001_R1_001_fastqc.html
+group_11_S11_L001_R1_001_fastqc.zip
+group_11_S11_L001_R1_001.fastq.gz
+variantreals.txt
+variants.txt
+variants.txtless
+ym-7.bam
+ym-7_filtered_indels.vcf
+ym-7_filtered_indels.vcf.idx
+ym-7_filtered_snps.vcf
+ym-7_filtered_snps.vcf.idx
+ym-7_mapped.bam
+ym-7_metrics.txt
+ym-7_raw_indels.vcf
+ym-7_raw_indels.vcf.idx
+ym-7_raw_snps.vcf
+ym-7_raw_snps.vcf.idx
+ym-7_raw_variants.vcf
+ym-7_raw_variants.vcf.idx
+ym-7_recal_data.table
+ym-7_recal_reads.bai
+ym-7_recal_reads.bam
+ym-7.sam
+ym-7_sorted_and_marked_file.bai
+ym-7_sorted_and_marked_file.bam
+ym-7_sorted.bam
+ym-7_sorted_marked_ReadGroups_file.bam
+ym-7_sorted_marked_ReadGroups_file.bam.bai
+ym-7_sub.fastq
+ym-7_sub_fastqc.html
+ym-7_sub_fastqc.zip
+ym-7_variants_recal.vcf
+ym-7_variants_recal.vcf.idx
+ym-WT.bam
+ym-WT_filtered_indels.vcf
+ym-WT_filtered_indels.vcf.idx
+ym-WT_filtered_snps.vcf
+ym-WT_filtered_snps.vcf.idx
+ym-WT_mapped.bam
+ym-WT_metrics.txt
+ym-WT_raw_indels.vcf
+ym-WT_raw_indels.vcf.idx
+ym-WT_raw_snps.vcf
+ym-WT_raw_snps.vcf.idx
+ym-WT_raw_variants.vcf
+ym-WT_raw_variants.vcf.idx
+ym-WT_recal_data.table
+ym-WT_recal_reads.bai
+ym-WT_recal_reads.bam
+ym-WT.sam
+ym-WT_sorted_and_marked_file.bai
+ym-WT_sorted_and_marked_file.bam
+ym-WT_sorted.bam
+ym-WT_sorted_marked_ReadGroups_file.bam
+ym-WT_sorted_marked_ReadGroups_file.bam.bai
+ym-WT_sub.fastq
+ym-WT_sub_fastqc.html
+ym-WT_sub_fastqc.zip
+ym-WT_variants_recal.vcf
+ym-WT_variants_recal.vcf.idx
+group_11@vpsmbw-p-srv05:~/Variant_Calling$ ^C
+group_11@vpsmbw-p-srv05:~/Variant_Calling$ group_11_S11_L001_R1_001_fastqc.zip
+group_11_S11_L001_R1_001_fastqc.zip: command not found
+group_11@vpsmbw-p-srv05:~/Variant_Calling$ group_11_S11_L001_R1_001_fastqc.zip
+group_11_S11_L001_R1_001_fastqc.zip: command not found
+group_11@vpsmbw-p-srv05:~/Variant_Calling$ hisat2 -q -x ../reference_dir/yeast -                                                                                                             U group_11_S11_L001_R1_001_fastqc.zip -S g11mutv2.sam
+Error: reads file does not look like a FASTQ file
+terminate called after throwing an instance of 'int'
+Aborted (core dumped)
+(ERR): hisat2-align exited with value 134
+group_11@vpsmbw-p-srv05:~/Variant_Calling$ history
+    1  SRV=admin5
+    2  tree
+    3  pwd
+    4  SRV=admin5
+    5  pwd
+    6  cd /home/$SRV/SNP_calling/first_part/raw_data/
+    7  ls
+    8  ls -lhrt
+    9  less ym-WT_sub.fastq
+   10  less ym-7_sub.fastq
+   11  /home/group_11
+   12  pwd
+   13  ~
+   14  less ym-WT_sub.fastq
+   15  less ym-7_sub.fastq
+   16  cd /home/group11
+   17  cd /home/group_11
+   18  pwde
+   19  pwd
+   20  mkdir Variant_Calling
+   21  cd Variant_Calling
+   22  pwd
+   23  cp /home/$SRV/SNP_calling/first_part/raw_data/ym-WT_sub.fastq .
+   24  ls
+   25  cp /home/$SRV/SNP_calling/first_part/raw_data/ym-7_sub.fastq .
+   26  ls
+   27  ls -lhrt
+   28  head
+   29  head ym-WT_sub.fastq
+   30  head ym-7_sub.fastq
+   31  wc -l ym-WT_sub.fastq
+   32  wc -l @NB501365:373:H7LTKBGXB:3:23501:12686:12384 1:N:0:CTTGTA
+   33  ACATTGTGTTTGCCTGACATGTATCTATCATAAAGAAGATTTCATTGTATCTTTTCTTTTCGTACATTTGCTG                                                                                                             GA
+   34  +
+   35  wc -l ym-7_sub.fastq
+   36  fastqc ym-7_sub.fastq
+   37  ls
+   38  fastqc ym-7_sub.fastq
+   39  ls
+   40  ~
+   41  cd /home/group_11
+   42  mkdir reference_dir
+   43  cd reference_dir
+   44  cp /home/$SRV/SNP_calling/first_part/reference/S288C_reference_plus_2u.fa                                                                                                              .
+   45  hisat2-build S288C_reference_plus_2u.fa yeast
+   46  ls
+   47  cd /home/group_11
+   48  cd Variant_Calling
+   49  hisat2 -q -x reference_dir/yeast -U ym-WT_sub.fastq -S ym-WT.sam
+   50  ls
+   51  hisat2 -q -x reference_dir/yeast -U ym-WT_sub.fastq -S ym-WT.sam
+   52  hisat2 -q -x ../reference_dir/yeast -U ym-WT_sub.fastq -S ym-WT.sam
+   53  hisat2 -q -x ../reference_dir/yeast -U ym-7_sub.fastq -S ym-7.sam
+   54  head -30 ym-WT.sam
+   55  samtools view -bS -h ym-WT.sam > ym-WT.bam
+   56  samtools view -bS -h ym-7.sam > ym-7.bam
+   57  head -30 ym-WT.bam
+   58  samtools view ym-WT.bam
+   59  samtools view -b -F 4 ym-WT.bam > ym-WT_mapped.bam
+   60  samtools view -b -F 4 ym-7.bam > ym-7_mapped.bam
+   61  gatk SortSam -INPUT ym-WT_mapped.bam -OUTPUT ym-WT_sorted.bam -SORT_ORDER                                                                                                              coordinate
+   62  gatk SortSam -INPUT ym-7_mapped.bam -OUTPUT ym-7_sorted.bam -SORT_ORDER c                                                                                                             oordinate
+   63  gatk MarkDuplicates -INPUT ym-WT_sorted.bam -OUTPUT ym-WT_sorted_and_mark                                                                                                             ed_file.bam -METRICS_FILE ym-WT_metrics.txt -VALIDATION_STRINGENCY LENIENT -REMO                                                                                                             VE_DUPLICATES True -CREATE_INDEX True
+   64  gatk MarkDuplicates -INPUT ym-7_sorted.bam -OUTPUT ym-7_sorted_and_marked                                                                                                             _file.bam -METRICS_FILE ym-7_metrics.txt -VALIDATION_STRINGENCY LENIENT -REMOVE_                                                                                                             DUPLICATES True -CREATE_INDEX True
+   65  gatk AddOrReplaceReadGroups -I ym-WT_sorted_and_marked_file.bam -O ym-WT_                                                                                                             sorted_marked_ReadGroups_file.bam -RGID 4 -RGLB lib1 -RGPL ILLUMINA -RGPU unit1                                                                                                              -RGSM 20
+   66  gatk AddOrReplaceReadGroups -I ym-7_sorted_and_marked_file.bam -O ym-7_so                                                                                                             rted_marked_ReadGroups_file.bam -RGID 4 -RGLB lib1 -RGPL ILLUMINA -RGPU unit1 -R                                                                                                             GSM 20
+   67  samtools index ym-WT_sorted_marked_ReadGroups_file.bam
+   68  samtools index ym-7_sorted_marked_ReadGroups_file.bam
+   69  cd home/group_11
+   70  ~
+   71  ls
+   72  cd reference_dir/
+   73  ls
+   74  PICARD=/home/$SRV/SNP_calling/first_part/software/picard.jar
+   75  java -jar $PICARD CreateSequenceDictionary R=S288C_reference_plus_2u.fa O                                                                                                             =S288C_reference_plus_2u.dict
+   76  samtools faidx S288C_reference_plus_2u.fa
+   77  gatk HaplotypeCaller -R reference_dir/S288C_reference_plus_2u.fa -I ym-WT                                                                                                             _sorted_marked_ReadGroups_file.bam  -O ym-WT_raw_variants.vcf
+   78  ls
+   79  cd /home/group_11
+   80  cd Variant_Calling/
+   81  gatk HaplotypeCaller -R ../reference_dir/S288C_reference_plus_2u.fa -I ym                                                                                                             -WT_sorted_marked_ReadGroups_file.bam  -O ym-WT_raw_variants.vcf
+   82  gatk HaplotypeCaller -R ../reference_dir/S288C_reference_plus_2u.fa -I ym                                                                                                             -7_sorted_marked_ReadGroups_file.bam  -O ym-7_raw_variants.vcf
+   83  cf
+   84  gatk SelectVariants -R ../reference_dir/S288C_reference_plus_2u.fa -V ym-                                                                                                             WT_raw_variants.vcf --select-type-to-include SNP -O ym-WT_raw_snps.vcf
+   85  gatk SelectVariants -R ../reference_dir/S288C_reference_plus_2u.fa -V ym-                                                                                                             7_raw_variants.vcf --select-type-to-include SNP -O ym-7_raw_snps.vcf
+   86  gatk SelectVariants -R ../reference_dir/S288C_reference_plus_2u.fa -V ym-                                                                                                             WT_raw_variants.vcf --select-type-to-include INDEL -O ym-WT_raw_indels.vcf
+   87  gatk SelectVariants -R ../reference_dir/S288C_reference_plus_2u.fa -V ym-                                                                                                             7_raw_variants.vcf --select-type-to-include INDEL -O ym-7_raw_indels.vcf
+   88  gatk VariantFiltration -R ../reference_dir/S288C_reference_plus_2u.fa -V                                                                                                              ym-WT_raw_snps.vcf --filter-expression 'QD < 2.0 || FS > 60.0 || MQ < 40.0 || MQ                                                                                                             RankSum < -12.5 || ReadPosRankSum < -8.0 || SOR > 4.0' --filter-name "basic_snp_                                                                                                             filter" -O ym-WT_filtered_snps.vcf
+   89  gatk VariantFiltration -R ../reference_dir/S288C_reference_plus_2u.fa -V                                                                                                              ym-7_raw_snps.vcf --filter-expression 'QD < 2.0 || FS > 60.0 || MQ < 40.0 || MQR                                                                                                             ankSum < -12.5 || ReadPosRankSum < -8.0 || SOR > 4.0' --filter-name "basic_snp_f                                                                                                             ilter" -O ym-7_filtered_snps.vcf
+   90  gatk VariantFiltration -R ../reference_dir/S288C_reference_plus_2u.fa -V                                                                                                              ym-WT_raw_indels.vcf --filter-expression 'QD < 2.0 || FS > 200.0 || ReadPosRankS                                                                                                             um < -20.0 || SOR > 10.0' --filter-name "basic_indel_filter" -O ym-WT_filtered_i                                                                                                             ndels.vcf
+   91  gatk VariantFiltration -R ../reference_dir/S288C_reference_plus_2u.fa -V                                                                                                              ym-7_raw_indels.vcf --filter-expression 'QD < 2.0 || FS > 200.0 || ReadPosRankSu                                                                                                             m < -20.0 || SOR > 10.0' --filter-name "basic_indel_filter" -O ym-7_filtered_ind                                                                                                             els.vcf
+   92  gatk BaseRecalibrator -R ../reference_dir/S288C_reference_plus_2u.fa -I y                                                                                                             m-WT_sorted_marked_ReadGroups_file.bam  --known-sites ym-WT_filtered_snps.vcf  -                                                                                                             -known-sites ym-WT_filtered_indels.vcf -O ym-WT_recal_data.table
+   93  gatk BaseRecalibrator -R ../reference_dir/S288C_reference_plus_2u.fa -I y                                                                                                             m-7_sorted_marked_ReadGroups_file.bam  --known-sites ym-7_filtered_snps.vcf  --k                                                                                                             nown-sites ym-7_filtered_indels.vcf -O ym-7_recal_data.table
+   94  gatk ApplyBQSR -R ../reference_dir/S288C_reference_plus_2u.fa -I ym-WT_so                                                                                                             rted_marked_ReadGroups_file.bam --bqsr-recal-file ym-WT_recal_data.table -O ym-W                                                                                                             T_recal_reads.bam
+   95  gatk ApplyBQSR -R ../reference_dir/S288C_reference_plus_2u.fa -I ym-7_sor                                                                                                             ted_marked_ReadGroups_file.bam --bqsr-recal-file ym-7_recal_data.table -O ym-7_r                                                                                                             ecal_reads.bam
+   96  gatk HaplotypeCaller -R ../reference_dir/S288C_reference_plus_2u.fa -I ym                                                                                                             -WT_recal_reads.bam  -O ym-WT_variants_recal.vcf
+   97  gatk HaplotypeCaller -R ../reference_dir/S288C_reference_plus_2u.fa -I ym                                                                                                             -7_recal_reads.bam  -O ym-7_variants_recal.vcf
+   98  less ym-WT_variants_recal.vcf
+   99  grep -n ^chr ym-WT_variants_recal.vcf | head -n1
+  100  grep -n ^chr ym-7_variants_recal.vcf | head -n1
+  101  grep -c ^chr ym-WT_variants_recal.vcf
+  102  grep -c ^chr ym-7_variants_recal.vcf
+  103  grep -c LowQual ym-WT_variants_recal.vcf
+  104  grep -c LowQual ym-7_variants_recal.vcf
+  105  cd /home/group_11
+  106  cd reference_dir/
+  107  ls
+  108  cd /home/group_11
+  109  cd Variant_Calling/
+  110  less ym-7_variants_recal.vcf
+  111  vcftools --vcf ym-7_variants_recal.vcf --diff ym-WT_variants_recal.vcf --                                                                                                             diff-site --out compared
+  112  less compared.diff.sites_in_files | awk 'BEGIN{print "Chr\tPos\tREF\tALT"                                                                                                             }; NR > 1{ if ($4 == 1) { print $1, $2, $5, $7} }' OFS='\t' > variants.txtless c                                                                                                             ompared.diff.sites_in_files | awk 'BEGIN{print "Chr\tPos\tREF\tALT"}; NR > 1{ if                                                                                                              ($4 == 1) { print $1, $2, $5, $7} }' OFS='\t' > variants.txt
+  113  ls
+  114  ll
+  115  history
+  116  cd Variant_Calling/
+  117  ls
+  118  ls -lhrt
+  119  less ym-WT_variants_recal.vcf
+  120  less compared.diff.sites_in_files
+  121  vcftools --vcf ym-7_variants_recal.vcf --diff ym-WT_variants_recal.vcf --                                                                                                             diff-site --out compared
+  122  less compared.diff.sites_in_files | awk 'BEGIN{print "Chr\tPos\tREF\tALT"                                                                                                             }; NR > 1{ if ($4 == 1) { print $1, $2, $5, $7} }' OFS='\t' > variants.txt
+  123  less compared.diff.sites_in_files | awk 'BEGIN{print "Chr\tPos\tREF\tALT"                                                                                                             }; NR > 1{ if ($4 == 1) { print $1, $2, $5, $7} }' OFS='\t'
+  124  less compared.diff.sites_in_files | awk 'BEGIN{print "Chr\tPos\tREF\tALT"                                                                                                             }; NR > 1{ if ($4 == 1) { print $1, $2, $5, $7} }' OFS='\t' > variants.txt
+  125  less variants.txt
+  126  cd /home/group_11
+  127  cd home/admin5/2025_yeast_NGS
+  128  SRV=admin5
+  129  cd home/admin5/2025_yeast_NGS
+  130  cd /home/admin5/2025_yeast_NGS
+  131  ls /home/admin5/2025_yeast_NGS
+  132  cd /home/admin5/2025_yeast_NGS
+  133  cp group_11_S11_L001_R1_001.fastqc.html /home/group_11
+  134  cp group_11_S11_L001_R1_001_fastqc.html /home/group_11
+  135  cp group_11_S11_L001_R1_001_fastqc.zip /home/group_11
+  136  cp group_11_S11_L001_R1_001_fastqc.gz /home/group_11
+  137  cp group_11_S11_L001_R1_001_fastq.gz /home/group_11
+  138  cp group_11_S11_L001_R1_001.fastq.gz /home/group_11
+  139  cd /home/group_11
+  140  ls
+  141  SRV=admin5
+  142  cd /Variant_Calling
+  143  cd Variant_Calling/
+  144  cd /home/group_11
+  145  less group_11_S11_L001_R1_fastqc.zip
+  146  less group_11_S11_L001_R1_001_fastqc.zip
+  147  less group_11_S11_L001_R1_001_fastq.gz
+  148  less group_11_S11_L001_R1_001.fastq.gz
+  149  cp group_11_S11_L001_R1_001.fastq.gz .
+  150  home/group_11/group_11_S11_L001_R1_001.fastq.gz .
+  151  /home/group_11/group_11_S11_L001_R1_001.fastq.gz .
+  152  cd /home/group_11
+  153  cp group_11_S11_L001_R1_001.fastq.gz /Variant_Calling
+  154  cp group_11_S11_L001_R1_001.fastq.gz Variant_Calling/
+  155  cd Variant_Calling/
+  156  ls
+  157  less group_11_S11_L001_R1_001.fastq.gz
+  158  fastqc group_11_S11_L001_R1_001.fastq.gz
+  159  ls
+  160  hisat2 -q -x ../reference_dir/yeast -U group_11_S11_L001_R1_001.fastq.gz                                                                                                              -S g11mut.sam
+  161  head -30 g11mut.sam
+  162  samtools view -bS -h g11mut.sam > g11mut.bam
+  163  samtools view g11mut.bam
+  164  samtools view -b -F 4 g11mut.bam > g11mut_mapped.bam
+  165  gatk SortSam -INPUT g11mut_mapped.bam -OUTPUT g11mut_sorted.bam -SORT_ORD                                                                                                             ER coordinate
+  166  gatk MarkDuplicates -INPUT g11mut_sorted.bam -OUTPUT g11mut_sorted_and_ma                                                                                                             rked_file.bam -METRICS_FILE g11mut_metrics.txt -VALIDATION_STRINGENCY LENIENT -R                                                                                                             EMOVE_DUPLICATES True -CREATE_INDEX True
+  167  gatk AddOrReplaceReadGroups -I g11mut_sorted_and_marked_file.bam -O g11mu                                                                                                             t_sorted_marked_ReadGroups_file.bam -RGID 4 -RGLB lib1 -RGPL ILLUMINA -RGPU unit                                                                                                             1 -RGSM 20
+  168  samtools index g11mut_sorted_marked_ReadGroups_file.bam
+  169  gatk HaplotypeCaller -R ../reference_dir/S288C_reference_plus_2u.fa -I g1                                                                                                             1mut_sorted_marked_ReadGroups_file.bam  -O g11mut_raw_variants.vcf
+  170  gatk SelectVariants -R ../reference_dir/S288C_reference_plus_2u.fa -V g11                                                                                                             mut_raw_variants.vcf --select-type-to-include SNP -O g11mut_raw_snps.vcf
+  171  gatk SelectVariants -R ../reference_dir/S288C_reference_plus_2u.fa -V g11                                                                                                             mut_raw_variants.vcf --select-type-to-include INDEL -O g11mut_raw_indels.vcf
+  172  gatk VariantFiltration -R ../reference_dir/S288C_reference_plus_2u.fa -V                                                                                                              g11mut_raw_snps.vcf --filter-expression 'QD < 2.0 || FS > 60.0 || MQ < 40.0 || M                                                                                                             QRankSum < -12.5 || ReadPosRankSum < -8.0 || SOR > 4.0' --filter-name "basic_snp                                                                                                             _filter" -O g11mut_filtered_snps.vcf
+  173  gatk VariantFiltration -R ../reference_dir/S288C_reference_plus_2u.fa -V                                                                                                              g11mut_raw_indels.vcf --filter-expression 'QD < 2.0 || FS > 200.0 || ReadPosRank                                                                                                             Sum < -20.0 || SOR > 10.0' --filter-name "basic_indel_filter" -O g11mut_filtered                                                                                                             _indels.vcf
+  174  tration -R ../reference_dir/S288C_reference_plus_2u.fa -V g11mut_raw_inde                                                                                                             ls.vcf --filter-expression 'QD < 2.0 || FS > 200.0 || ReadPosRankSum < -20.0 ||                                                                                                              SOR > 10.0' --filter-name "basic_indel_filter" -O g11mut_filtered_indels.vcf
+  175  gatk BaseRecalibrator -R ../reference_dir/S288C_reference_plus_2u.fa -I g                                                                                                             11mut_sorted_marked_ReadGroups_file.bam  --known-sites g11mut_filtered_snps.vcf                                                                                                               --known-sites g11mut_filtered_indels.vcf -O g11mut_recal_data.table
+  176  gatk ApplyBQSR -R ../reference_dir/S288C_reference_plus_2u.fa -I g11mut_s                                                                                                             orted_marked_ReadGroups_file.bam --bqsr-recal-file g11mut_recal_data.table -O g1                                                                                                             1mut_recal_reads.bam
+  177  gatk HaplotypeCaller -R ../reference_dir/S288C_reference_plus_2u.fa -I g1                                                                                                             1mut_recal_reads.bam  -O g11mut_variants_recal.vcf
+  178  less g11mut_variants_recal.vcf
+  179  grep -n ^chr g11mut_variants_recal.vcf | head -n1
+  180  wc -l g11mut_variants_recal.vcf
+  181  grep -c ^chr g11mut_variants_recal.vcf
+  182  grep -c LowQual g11mut_variants_recal.vcf
+  183  grep LowQual g11mut_variants_recal.vcf
+  184  ls
+  185  vcftools --vcf g11mut_variants_recal.vcf --diff ym-WT_variants_recal.vcf                                                                                                              --diff-site --out compared
+  186  less compared.diff.sites_in_files | awk 'BEGIN{print "Chr\tPos\tREF\tALT"                                                                                                             }; NR > 1{ if ($4 == 1) { print $1, $2, $5, $7} }' OFS='\t' > variantreals.txt
+  187  cd Variant_Calling/
+  188  ls
+  189  less g11mut_variants_recal.vcf
+  190  gatk VariantFiltration   -R reference_dir/S288C_reference_plus_2u.fa   -V                                                                                                              ym-WT_raw_snps.vcf   --filter-expression 'QD < 5.0 || FS > 30.0 || MQ < 50.0 ||                                                                                                              MQRankSum < -5.0 || ReadPosRankSum < -3.0 || SOR > 2.0'   --filter-name "strict                                                                                                             _snp_filter"   -O ym-WT_filtered_snps_strict.vcf
+  191  gatk VariantFiltration   -R reference_dir/S288C_reference_plus_2u.fa   -V                                                                                                              ym-WT_raw_snps.vcf   --filter-expression 'QD < 5.0 || FS > 30.0 || MQ < 50.0 ||                                                                                                              MQRankSum < -5.0 || ReadPosRankSum < -3.0 || SOR > 2.0'   --filter-name "strict                                                                                                             _snp_filter"   -O ym-WT_filtered_snps_strict.vcf
+  192  cd Variant_Calling/
+  193  hisat2 -q -x reference_dir/yeast -U g11mut_sub.fastq -S g11mutv2.sam
+  194  hisat2 -q -x ../reference_dir/yeast -U g11mut_sub.fastq -S g11mutv2.sam
+  195  ls
+  196  group_11_S11_L001_R1_001_fastqc.zip
+  197  hisat2 -q -x ../reference_dir/yeast -U group_11_S11_L001_R1_001_fastqc.zi                                                                                                             p -S g11mutv2.sam
+  198  history
+group_11@vpsmbw-p-srv05:~/Variant_Calling$
