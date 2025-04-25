@@ -1,24 +1,22 @@
-  SRV=admin5
-    2  pwd
-    3  cd /home/$SRV/SNP_calling/first_part/raw_data/
-    4  ls
-    5  ls -lhrt
-    6  less ym-WT_sub.fastq
-    7  less ym-7_sub.fastq
-    8  /home/group_11
-    9  pwd
-   10  ~
-   11  less ym-WT_sub.fastq
-   12  less ym-7_sub.fastq
-   13  cd /home/group11
-   14  cd /home/group_11
-   15  pwde
-   16  pwd
-   17  mkdir Variant_Calling
-   18  cd Variant_Calling
-   19  pwd
-   20  cp /home/$SRV/SNP_calling/first_part/raw_data/ym-WT_sub.fastq .
-   21  ls
+SRV=admin5
+pwd
+cd /home/$SRV/SNP_calling/first_part/raw_data/
+ls
+ls -lhrt
+less ym-WT_sub.fastq
+less ym-7_sub.fastq
+/home/group_11
+pwd
+less ym-WT_sub.fastq
+less ym-7_sub.fastq
+cd /home/group11
+cd /home/group_11
+pwd
+mkdir Variant_Calling
+cd Variant_Calling
+pwd
+cp /home/$SRV/SNP_calling/first_part/raw_data/ym-WT_sub.fastq .
+ls
    22  cp /home/$SRV/SNP_calling/first_part/raw_data/ym-7_sub.fastq .
    23  ls
    24  ls -lhrt
